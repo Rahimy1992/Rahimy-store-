@@ -1,0 +1,6 @@
+{
+  "name": "Rahimy Smart Commerce",
+  "description": "Rahimy Smart Commerce - POS, multi-image product management, sales analytics, multi-page AI booklet OCR, multilingual customer AI, and role-based management assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

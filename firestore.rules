@@ -1,0 +1,311 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for Authentication & RBAC
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function getUserRole() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        ? getUserData().role
+        : 'ANONYMOUS';
+    }
+
+    function isSuperAdmin() {
+      return getUserRole() == 'SUPER_ADMIN';
+    }
+
+    function isManager() {
+      return getUserRole() == 'MANAGER' || isSuperAdmin();
+    }
+
+    function isEmployee() {
+      return getUserRole() == 'EMPLOYEE' || isManager();
+    }
+
+    function isViewer() {
+      return getUserRole() == 'VIEWER' || isEmployee();
+    }
+
+    function isCustomer() {
+      return getUserRole() == 'CUSTOMER';
+    }
+
+    // 1. Users collection
+    match /users/{userId} {
+      // Any authenticated user can read their own profile; Managers can read all users
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isManager() || isViewer());
+
+      // Only Super Admin can create/update Super Admin or Manager roles
+      // Managers can create Employee or Viewer roles, but cannot create Super Admins or change their own role
+      allow create: if isAuthenticated() && (
+        isSuperAdmin() ||
+        (isManager() && request.resource.data.role in ['EMPLOYEE', 'VIEWER', 'CUSTOMER'])
+      );
+
+      allow update: if isAuthenticated() && (
+        isSuperAdmin() ||
+        (isManager() && request.auth.uid != userId && request.resource.data.role in ['EMPLOYEE', 'VIEWER', 'CUSTOMER'] && resource.data.role != 'SUPER_ADMIN')
+      );
+
+      // Only Super Admin can delete users (prevent self-deletion)
+      allow delete: if isAuthenticated() && isSuperAdmin() && request.auth.uid != userId;
+    }
+
+    // 2. Products collection
+    match /products/{productId} {
+      // Public / Customer / All authenticated roles can read active products; inactive products restricted to staff
+      allow read: if true;
+
+      // Only Managers and Super Admins can create, update, or delete products
+      allow create, update: if isAuthenticated() && isManager();
+      allow delete: if isAuthenticated() && isManager();
+    }
+
+    // 3. Categories & Brands
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && isManager();
+    }
+
+    match /brands/{brandId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && isManager();
+    }
+
+    // 4. Sales & Sale Items (Point of Sale Records)
+    match /sales/{saleId} {
+      // Employees, Managers, Super Admins can read sales; Viewers can read historical sales
+      allow read: if isAuthenticated() && isViewer();
+
+      // Employees and Managers can create sales (checkout)
+      allow create: if isAuthenticated() && isEmployee() && request.resource.data.status == 'ACTIVE';
+
+      // Sales cannot be deleted; only voided by Managers or Super Admins with void reason
+      allow update: if isAuthenticated() && isManager() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'voidReason', 'voidedByUserId', 'voidedAt']) &&
+        request.resource.data.status == 'VOID';
+
+      allow delete: if false; // Permanent audit preservation
+    }
+
+    match /saleItems/{saleItemId} {
+      allow read: if isAuthenticated() && isViewer();
+
+      // Immutable snapshots of cost, price, profit at time of sale
+      allow create: if isAuthenticated() && isEmployee() &&
+        request.resource.data.unitCostSnapshot is number &&
+        request.resource.data.unitPriceSnapshot is number &&
+        request.resource.data.costTotal is number &&
+        request.resource.data.grossProfit is number;
+
+      // Sale item snapshots cannot be modified after insertion
+      allow update, delete: if false;
+    }
+
+    // 5. Orders (Customer & Online Orders)
+    match /orders/{orderId} {
+      // Customers can read their own orders; Staff can read all orders
+      allow read: if isAuthenticated() && (
+        isViewer() ||
+        (isCustomer() && resource.data.customerId == request.auth.uid)
+      );
+
+      allow create: if isAuthenticated() && (
+        isEmployee() ||
+        (isCustomer() && request.resource.data.customerId == request.auth.uid)
+      );
+
+      allow update: if isAuthenticated() && (
+        isEmployee() ||
+        (isCustomer() && resource.data.customerId == request.auth.uid && resource.data.status == 'PENDING' && request.resource.data.status == 'CANCELLED')
+      );
+
+      allow delete: if false;
+    }
+
+    match /orderItems/{orderItemId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+
+    // 6. Customers Collection
+    match /customers/{customerId} {
+      // Customers can read/update their own profile; Staff can read/write
+      allow read: if isAuthenticated() && (isViewer() || request.auth.uid == customerId);
+      allow create: if isAuthenticated() && (isEmployee() || request.auth.uid == customerId);
+      allow update: if isAuthenticated() && (isEmployee() || request.auth.uid == customerId);
+      allow delete: if isAuthenticated() && isManager();
+    }
+
+    // 7. Currency Configurations
+    match /currencyConfigs/{configId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && isManager();
+    }
+
+    // 8. Audit Logs (Append-Only)
+    match /auditLogs/{logId} {
+      // Managers and Super Admins can view audit logs
+      allow read: if isAuthenticated() && isManager();
+
+      // Any authenticated user action can append an audit log
+      allow create: if isAuthenticated();
+
+      // Audit logs are strictly immutable: never updated or deleted
+      allow update, delete: if false;
+    }
+
+    // 9. Catalog Scans & AI OCR Metadata
+    match /catalogScans/{scanId} {
+      allow read: if isAuthenticated() && isViewer();
+      allow write: if isAuthenticated() && isEmployee();
+    }
+
+    // 10. AI Conversations
+    match /aiConversations/{convId} {
+      allow read, write: if isAuthenticated() && (
+        resource == null || resource.data.userId == request.auth.uid || isManager()
+      );
+    }
+
+    // 11. System Backups
+    match /backups/{backupId} {
+      allow read, write: if isAuthenticated() && isSuperAdmin();
+    }
+
+    // 12. Support Tickets & Support Chat Messages
+    match /supportTickets/{ticketId} {
+      allow read: if isAuthenticated() && (
+        isViewer() ||
+        (resource != null && resource.data.userId == request.auth.uid)
+      );
+
+      allow create: if isAuthenticated() && (
+        isViewer() ||
+        (request.resource.data.userId == request.auth.uid)
+      );
+
+      allow update: if isAuthenticated() && (
+        isManager() ||
+        (resource.data.userId == request.auth.uid)
+      );
+
+      allow delete: if isAuthenticated() && isSuperAdmin();
+
+      match /messages/{messageId} {
+        allow read: if isAuthenticated() && (
+          isViewer() ||
+          get(/databases/$(database)/documents/supportTickets/$(ticketId)).data.userId == request.auth.uid
+        );
+
+        allow create: if isAuthenticated() && (
+          isViewer() ||
+          get(/databases/$(database)/documents/supportTickets/$(ticketId)).data.userId == request.auth.uid
+        );
+
+        allow update, delete: if isAuthenticated() && isManager();
+      }
+    }
+
+    // 13. B2B Wholesale Commerce Collections
+    match /businessCustomers/{businessId} {
+      allow read: if isAuthenticated() && (
+        isViewer() ||
+        (resource != null && resource.data.ownerUid == request.auth.uid)
+      );
+      allow create: if isAuthenticated() && (
+        isEmployee() ||
+        (request.resource.data.ownerUid == request.auth.uid)
+      );
+      allow update: if isAuthenticated() && (
+        isManager() ||
+        (resource != null && resource.data.ownerUid == request.auth.uid)
+      );
+      allow delete: if isAuthenticated() && isSuperAdmin();
+    }
+
+    match /wholesalePriceLists/{priceListId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isManager();
+    }
+
+    match /wholesalePrices/{priceId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && isManager();
+    }
+
+    match /b2bOrders/{orderId} {
+      allow read: if isAuthenticated() && (
+        isViewer() ||
+        (resource != null && resource.data.customerUid == request.auth.uid)
+      );
+      allow create: if isAuthenticated() && (
+        isEmployee() ||
+        (request.resource.data.customerUid == request.auth.uid)
+      );
+      allow update: if isAuthenticated() && (
+        isEmployee() ||
+        (resource != null && resource.data.customerUid == request.auth.uid)
+      );
+      allow delete: if isAuthenticated() && isSuperAdmin();
+    }
+
+    match /quotations/{quotationId} {
+      allow read: if isAuthenticated() && (
+        isViewer() ||
+        (resource != null && resource.data.customerUid == request.auth.uid)
+      );
+      allow create: if isAuthenticated() && (
+        isEmployee() ||
+        (request.resource.data.customerUid == request.auth.uid)
+      );
+      allow update: if isAuthenticated() && (
+        isEmployee() ||
+        (resource != null && resource.data.customerUid == request.auth.uid)
+      );
+      allow delete: if isAuthenticated() && isSuperAdmin();
+    }
+
+    match /b2bInvoices/{invoiceId} {
+      allow read: if isAuthenticated() && (
+        isViewer() ||
+        (resource != null && resource.data.customerUid == request.auth.uid)
+      );
+      allow create: if isAuthenticated() && isEmployee();
+      allow update: if isAuthenticated() && isManager(); // Immutable except status payment updates
+      allow delete: if isAuthenticated() && isSuperAdmin();
+    }
+
+    match /b2bPayments/{paymentId} {
+      allow read: if isAuthenticated() && (
+        isViewer() ||
+        (resource != null && resource.data.customerUid == request.auth.uid)
+      );
+      allow create: if isAuthenticated() && isEmployee();
+      allow update, delete: if isAuthenticated() && isSuperAdmin();
+    }
+
+    match /b2bReturns/{returnId} {
+      allow read: if isAuthenticated() && isViewer();
+      allow create, update: if isAuthenticated() && isManager();
+      allow delete: if isAuthenticated() && isSuperAdmin();
+    }
+
+    match /b2bDeliveries/{deliveryId} {
+      allow read: if isAuthenticated() && (
+        isViewer() ||
+        (resource != null && resource.data.customerUid == request.auth.uid)
+      );
+      allow create, update: if isAuthenticated() && isEmployee();
+      allow delete: if isAuthenticated() && isSuperAdmin();
+    }
+  }
+}

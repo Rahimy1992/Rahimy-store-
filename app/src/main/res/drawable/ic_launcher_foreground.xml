@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- POS Terminal / Register Base in safe zone -->
+    <path
+        android:fillColor="#F8FAFC"
+        android:pathData="M32,38 C32,34.7 34.7,32 38,32 L70,32 C73.3,32 76,34.7 76,38 L76,68 C76,71.3 73.3,74 70,74 L38,74 C34.7,74 32,71.3 32,68 Z" />
+    <!-- Screen -->
+    <path
+        android:fillColor="#3B82F6"
+        android:pathData="M38,38 L70,38 L70,52 L38,52 Z" />
+    <!-- Screen Content bar -->
+    <path
+        android:fillColor="#93C5FD"
+        android:pathData="M42,43 L56,43 A2,2 0 0 1 56,47 L42,47 Z" />
+    <!-- Keypad Dots -->
+    <path
+        android:fillColor="#64748B"
+        android:pathData="M41,58 h4 v4 h-4z M48,58 h4 v4 h-4z M55,58 h4 v4 h-4z M62,58 h4 v4 h-4z M41,65 h4 v4 h-4z M48,65 h4 v4 h-4z M55,65 h4 v4 h-4z M62,65 h4 v4 h-4z" />
+    <!-- AI Sparkle -->
+    <path
+        android:fillColor="#F59E0B"
+        android:pathData="M74,28 L76,33 L81,35 L76,37 L74,42 L72,37 L67,35 L72,33 Z" />
+    <!-- Small AI Sparkle -->
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M33,26 L34.5,29.5 L38,31 L34.5,32.5 L33,36 L31.5,32.5 L28,31 L31.5,29.5 Z" />
+</vector>

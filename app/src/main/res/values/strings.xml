@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Rahimy Smart Commerce</string>
+    <string name="app_title_fa">تجارت هوشمند رحیمی</string>
+    <string name="mode_local_db">آنلاین / دیتابیس محلی</string>
+
+    <!-- Navigation Strings -->
+    <string name="nav_home">خانه</string>
+    <string name="nav_sales">فروش</string>
+    <string name="nav_products">موجودی</string>
+    <string name="nav_analytics">گزارش‌ها</string>
+    <string name="nav_more">بیشتر</string>
+    <string name="nav_catalog_ocr">اسکن هوشمند کاتالوگ (OCR)</string>
+    <string name="nav_customer_ai">پشتیبان مشتریان (AI)</string>
+    <string name="nav_manager_ai">مشاور مدیر (AI)</string>
+    <string name="nav_settings">تنظیمات</string>
+    <string name="nav_verify">تاییدیه سیستم</string>
+
+    <!-- Dashboard Strings -->
+    <string name="dashboard_sales_today">فروش امروز</string>
+    <string name="dashboard_customers">مشتریان</string>
+    <string name="dashboard_products">محصولات</string>
+    <string name="dashboard_exchange">صرافی</string>
+    <string name="dashboard_main_menu">منوی اصلی خدمات</string>
+    <string name="dashboard_tile_sales">فروش</string>
+    <string name="dashboard_tile_inventory">موجودی</string>
+    <string name="dashboard_tile_customers">مشتریان</string>
+    <string name="dashboard_tile_suppliers">تأمین‌کنندگان</string>
+    <string name="dashboard_tile_invoices">صورتحساب</string>
+    <string name="dashboard_tile_expenses">مصارف</string>
+    <string name="dashboard_tile_debts">بدهکاری‌ها</string>
+    <string name="dashboard_tile_exchange">صرافی</string>
+    <string name="dashboard_tile_reports">گزارش‌ها</string>
+
+    <!-- Product / Inventory Strings -->
+    <string name="inventory_title">موجودی انبار</string>
+    <string name="inventory_add_product">افزودن محصول جدید</string>
+    <string name="inventory_edit_product">ویرایش محصول</string>
+    <string name="inventory_search_placeholder">جستجو بر اساس نام، کد SKU یا دسته‌بندی...</string>
+    <string name="inventory_all_categories">همه</string>
+    <string name="inventory_product_name">نام محصول *</string>
+    <string name="inventory_sku">کد SKU *</string>
+    <string name="inventory_barcode">بارکد</string>
+    <string name="inventory_category">دسته‌بندی</string>
+    <string name="inventory_brand">برند / سازنده</string>
+    <string name="inventory_cost_price">قیمت خرید (USD) *</string>
+    <string name="inventory_selling_price">قیمت فروش (USD) *</string>
+    <string name="inventory_stock_quantity">تعداد موجودی *</string>
+    <string name="inventory_min_stock">حد هشدار کمبود *</string>
+    <string name="inventory_description">توضیحات محصول</string>
+
+    <!-- Common Action Buttons -->
+    <string name="btn_save">ذخیره</string>
+    <string name="btn_cancel">انصراف</string>
+    <string name="btn_delete">حذف</string>
+    <string name="btn_edit">ویرایش</string>
+    <string name="btn_confirm">تایید</string>
+    <string name="btn_close">بستن</string>
+    <string name="btn_search">جستجو</string>
+    <string name="btn_clear">پاکسازی</string>
+    <string name="btn_refresh">به‌روزرسانی</string>
+    <string name="btn_camera">دوربین</string>
+    <string name="btn_gallery">گالری</string>
+
+    <!-- POS & Sales Strings -->
+    <string name="pos_title">فروش و صندوقدار (POS)</string>
+    <string name="pos_active_cart">سبد خرید فعال</string>
+    <string name="pos_sales_history">تاریخچه فروش</string>
+    <string name="pos_checkout">تکمیل خرید / پرداخت</string>
+    <string name="pos_cart_empty">سبد خرید خالی است</string>
+    <string name="pos_total">جمع کل:</string>
+    <string name="pos_void_sale">ابطال فروش</string>
+    <string name="pos_void_reason">دلیل ابطال فروش...</string>
+
+    <!-- Analytics & Reports -->
+    <string name="analytics_title">گزارش‌های مالی و آمار</string>
+    <string name="analytics_revenue">درآمد کل</string>
+    <string name="analytics_profit">سود ناخالص</string>
+    <string name="analytics_margin">حاشیه سود</string>
+    <string name="analytics_filter_today">امروز</string>
+    <string name="analytics_filter_week">این هفته</string>
+    <string name="analytics_filter_month">این ماه</string>
+    <string name="analytics_filter_year">امسال</string>
+
+    <!-- Settings & Security -->
+    <string name="settings_title">تنظیمات، کاربران و صرافی</string>
+    <string name="settings_language">زبان و جهت نمایش</string>
+    <string name="settings_currency">نرخ ارزها و صرافی</string>
+    <string name="settings_audit_logs">گزارش‌های امنیتی و رویدادها</string>
+</resources>
